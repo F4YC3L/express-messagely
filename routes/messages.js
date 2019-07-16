@@ -1,3 +1,14 @@
+const express = require("express");
+const Message = require("../models/message");
+const ExpressError = require("../expressError")
+const router = new express.Router();
+
+const { ensureLoggedIn, ensureCorrectUser, authenticateJWT } = require("../middleware/auth");
+
+
+
+
+
 /** GET /:id - get detail of message.
  *
  * => {message: {id,
@@ -10,7 +21,7 @@
  * Make sure that the currently-logged-in users is either the to or from user.
  *
  **/
-messageRoutes.get("/:id", async function(req, res, next){
+router.get("/:id", ensureCorrectUser, async function(req, res, next){
     try {
         let id = req.params.id
         let message = await Message.get(id);
@@ -29,10 +40,17 @@ messageRoutes.get("/:id", async function(req, res, next){
  *   {message: {id, from_username, to_username, body, sent_at}}
  *
  **/
-messageRoutes.post("/", async function(req, res, next){
+router.post("/", ensureCorrectUser, async function(req, res, next){
     try {
+        let user = jwt.decode(token);
+
         let {to_username, body} = req.body
-        
+        let message = {
+            from_username:user.username,
+            to_username: to_username,
+            body: body
+        }
+
 
     } catch(err){
         return next(err);
@@ -47,3 +65,20 @@ messageRoutes.post("/", async function(req, res, next){
  *
  **/
 
+ router.post("/:id/read", ensureCorrectUser, async function(req, res, next){
+    try {
+
+        const msg = await markRead(req.params.id);
+        if(msg){
+            return res.json({message: {id: msg.id, read_at: msg.read_at}})
+        }
+
+    } catch(err){
+        return next(err);
+    }
+
+
+ });
+
+
+module.exports = router;

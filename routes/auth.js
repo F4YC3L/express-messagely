@@ -1,5 +1,11 @@
 const User = require("../models/user")
 const express = require("express");
+const ExpressError = require("../expressError");
+const jwt = require("jsonwebtoken");
+const {SECRET_KEY} = require("../config");
+
+
+
 const router = new express.Router();
 
 /** POST /login - login: {username, password} => {token}
@@ -7,18 +13,20 @@ const router = new express.Router();
  * Make sure to update their last-login!
  *
  **/
-router.post("/login", async function(req,res,next){
-  try{
-    const { username, password } = req.body;
-
-    if(User.authenticate(username, password)) {
+router.post("/login", async function (req, res, next) {
+  try {
+    let {username, password} = req.body;
+    if (await User.authenticate(username, password)) {
+      let token = jwt.sign({username}, SECRET_KEY);
       User.updateLoginTimestamp(username);
-      let token = jwt.sign({ username }, SECRET_KEY);
-      return res.json({ token })
+      return res.json({token});
+    } else {
+      throw new ExpressError("Invalid username/password", 400);
     }
-    throw new ExpressError("Invalid user/password", 400);
-  } catch(err) {
-      return next(err)
+  }
+
+  catch (err) {
+    return next(err);
   }
 });
 
@@ -30,26 +38,18 @@ router.post("/login", async function(req,res,next){
  *  Make sure to update their last-login!
  */
 
- router.post("/register", async function(req, res, next){
-   try{
-    const { username,
-            password,
-            first_name,
-            last_name,
-            phone } = req.body;
+router.post("/register", async function (req, res, next) {
+  try {
+    let {username} = await User.register(req.body);
+    let token = jwt.sign({username}, SECRET_KEY);
+    User.updateLoginTimestamp(username);
+    return res.json({token});
+  }
 
-   let user = User.register(username, password, first_name, last_name, phone);
-   if(user){
-    User.updateLoginTimestamp(user.username);
-    let token = jwt.sign({ username }, SECRET_KEY);
-    return res.json({ token });
-   }
-   throw new ExpressError("Username exist!", 400);
-
-   }catch(err){
-      return next(err);
-   }
- });
+  catch (err) {
+    return next(err);
+  }
+});
 
 
  module.exports = router;

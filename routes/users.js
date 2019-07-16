@@ -1,12 +1,21 @@
+const express = require("express");
+const User = require("../models/user");
+const router = new express.Router();
+const { ensureLoggedIn, ensureCorrectUser } = require("../middleware/auth");
+const ExpressError = require("../expressError")
+
+
+
+
 /** GET / - get list of users.
  *
  * => {users: [{username, first_name, last_name, phone}, ...]}
  *
  **/
-userRoutes.get("/", ensuredLoginIn, async function (req, res, next)
- {
-    try {
-        let result = await User.all();
+router.get("/",ensureLoggedIn, async function (req, res, next){
+	try {
+				let result = await User.all();
+				
         return res.json({users:result});
     }
     catch(err){
@@ -18,7 +27,7 @@ userRoutes.get("/", ensuredLoginIn, async function (req, res, next)
  * => {user: {username, first_name, last_name, phone, join_at, last_login_at}}
  *
  **/
-userRoutes.get("/:username", ensuredLoginIn, async function (req, res, next){
+router.get("/:username", ensureCorrectUser, async function (req, res, next){
     
 	try {
 		let username = req.params.username
@@ -43,7 +52,7 @@ userRoutes.get("/:username", ensuredLoginIn, async function (req, res, next){
  *
  **/
 
-userRoutes.get("/:username/to", ensureCorrectUser, async function (req, res, next){
+router.get("/:username/to", ensureCorrectUser, async function (req, res, next){
     
 	try {
 		let username = req.params.username
@@ -67,7 +76,7 @@ userRoutes.get("/:username/to", ensureCorrectUser, async function (req, res, nex
  *
  **/
 
-userRoutes.get("/:username/from", ensureCorrectUser, async function (req, res, next){
+router.get("/:username/from", ensureCorrectUser, async function (req, res, next){
     
 	try {
 		let username = req.params.username
@@ -80,3 +89,6 @@ userRoutes.get("/:username/from", ensureCorrectUser, async function (req, res, n
 		next(err);
 	}  
 });
+
+
+module.exports = router;
