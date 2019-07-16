@@ -10,7 +10,18 @@
  * Make sure that the currently-logged-in users is either the to or from user.
  *
  **/
-
+messageRoutes.get("/:id", async function(req, res, next){
+    try {
+        let id = req.params.id
+        let message = await Message.get(id);
+        if( message){
+            return res.json({message: message});
+        }
+    }
+    catch(err){
+        next(err);
+    }
+});
 
 /** POST / - post message.
  *
@@ -18,7 +29,15 @@
  *   {message: {id, from_username, to_username, body, sent_at}}
  *
  **/
+messageRoutes.post("/", async function(req, res, next){
+    try {
+        let {to_username, body} = req.body
+        
 
+    } catch(err){
+        return next(err);
+    }
+});
 
 /** POST/:id/read - mark message as read:
  *
